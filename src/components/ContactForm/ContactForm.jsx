@@ -5,27 +5,28 @@ import { FaRegIdCard } from 'react-icons/fa';
 import * as Yup from 'yup';
 import { Button, StyledForm } from './ContactForm.styled';
 import { useDispatch, useSelector } from 'react-redux';
-import { addContact } from 'components/redux/contactsSlice';
+import { selectContacts } from 'components/redux/selectors';
+import { addContact } from 'components/redux/operations';
 
 const contactSchema = Yup.object().shape({
   name: Yup.string().min(3, 'Too Short!').required('Required'),
-  number: Yup.string()
+  phone: Yup.string()
     .matches(
-      /^\d{3}-\d{2}-\d{2}$/,
-      'Invalid phone number. Please enter a valid phone number in the format XXX-XX-XX.'
+      /^\d{3}-\d{3}-\d{4}$/,
+      'Invalid phone number. Please enter a valid phone number in the format XXX-XXX-XXXX.'
     )
     .required('Required'),
 });
 
 export const ContactForm = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(state => state.contacts.list);
+  const contacts = useSelector(selectContacts);
 
-  const handleSubmit = (name, number) => {
+  const handleSubmit = (name, phone) => {
     const newContact = {
       id: nanoid(),
       name: name,
-      number: number,
+      phone: phone,
     };
     const isContactDublicate = contacts.some(
       contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
@@ -41,11 +42,11 @@ export const ContactForm = () => {
       <Formik
         initialValues={{
           name: '',
-          number: '',
+          phone: '',
         }}
         validationSchema={contactSchema}
         onSubmit={(values, actions) => {
-          handleSubmit(values.name, values.number);
+          handleSubmit(values.name, values.phone);
           actions.resetForm();
         }}
       >
@@ -55,8 +56,8 @@ export const ContactForm = () => {
           <ErrorMessage component="div" name="name" />
 
           <label>Number</label>
-          <Field name="number" type="tel" placeholder="000-00-00" />
-          <ErrorMessage component="div" name="number" />
+          <Field name="phone" type="tel" placeholder="000-000-0000" />
+          <ErrorMessage component="div" name="phone" />
 
           <Button type="submit">
             <span>Add contact</span> <FaRegIdCard />

@@ -1,27 +1,49 @@
 import { createSlice } from '@reduxjs/toolkit';
-import contactsList from '../../data/data.json';
-import { persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import { addContact, deleteContact, fetchContacts } from '../redux/operations';
 
-const contactsSlice = createSlice({
-  name: 'contacts',
-  initialState: { list: contactsList },
-  reducers: {
-    addContact(state, action) {
-      state.list = [...state.list, action.payload];
-    },
-    deleteContact(state, action) {
-      state.list = state.list.filter(contact => contact.id !== action.payload);
-    },
-  },
-});
-const persistConfig = {
-  key: 'contacts',
-  storage,
+const handlePending = state => {
+  state.isLoading = true;
 };
 
-export const contactsReducer = persistReducer(
-  persistConfig,
-  contactsSlice.reducer
-);
-export const { addContact, deleteContact } = contactsSlice.actions;
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
+
+export const contactsSlice = createSlice({
+  name: 'contacts',
+  initialState: {
+    list: [],
+    isLoading: false,
+    isError: null,
+  },
+  reducers: {},
+
+  extraReducers: {
+    [fetchContacts.pending]: handlePending,
+    [fetchContacts.fulfilled]: (state, action) => {
+      state.isLoading = false;
+      state.isError = null;
+      state.list = action.payload;
+    },
+    [fetchContacts.rejected]: handleRejected,
+    [addContact.pending]: handlePending,
+    [addContact.fulfilled]: (state, action) => {
+      state.isLoading = false;
+      state.isError = null;
+      state.list.push(action.payload);
+    },
+    [addContact.rejected]: handleRejected,
+    [deleteContact.pending]: handlePending,
+    [deleteContact.fulfilled]: (state, action) => {
+      state.isLoading = false;
+      state.isError = null;
+      const index = state.list.findIndex(
+        contact => contact.id === action.payload.data.id
+      );
+      state.list.splice(index, 1);
+    },
+
+    [deleteContact.rejected]: handleRejected,
+  },
+});
